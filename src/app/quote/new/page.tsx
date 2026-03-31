@@ -176,8 +176,6 @@ export default function NewQuotePage() {
       <hr />
 
       <h2>Internal Cost Breakdown</h2>
-   <p>Actual Size: {totals.actualWidth} x {totals.actualHeight}</p>
-<p>Billed Size: {totals.billedWidth} x {totals.billedHeight}</p>
 <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
       <p>Lite 1 Cost: ${totals.lite1Amount.toFixed(2)}</p>
       <p>Lite 2 Cost: ${totals.lite2Amount.toFixed(2)}</p>
