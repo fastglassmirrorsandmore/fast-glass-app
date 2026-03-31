@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { priceInsulatedUnit } from "@/lib/pricing/insulated-unit-pricing";
+import { priceInsulatedUnit } from "../../../lib/pricing/insulated-unit-pricing";
 
 const PRICING_CATEGORIES = [
   { id: "retail", name: "Retail", multiplier: 1.0 },
@@ -20,8 +20,12 @@ const GLASS_PRODUCTS = [
 ];
 
 const SPACERS = [
-  { id: "quarter", name: '1/4"', costPerSqFt: 1.2 },
-  { id: "half", name: '1/2"', costPerSqFt: 1.4 },
+  { id: "quarter", name: '1/4"', costPerSqFt: 0.25 },
+  { id: "five16", name: '5/16"', costPerSqFt: 0.25 },
+  { id: "three8", name: '3/8"', costPerSqFt: 0.15 },
+  { id: "seven16", name: '7/16"', costPerSqFt: 0.30 },
+  { id: "half", name: '1/2"', costPerSqFt: 0.20 },
+  { id: "five8", name: '5/8"', costPerSqFt: 0.35 },
 ];
 
 function getById<T extends { id: string }>(items: T[], id: string): T {
@@ -59,12 +63,19 @@ export default function NewQuotePage() {
     });
 
     return {
-      sqFt: result.sqFt,
-      materialsAmount: result.materialsAmount * quantity,
-      adjustedMaterialsAmount: result.adjustedMaterialsAmount * quantity,
-      taxAmount: result.taxAmount * quantity,
-      totalAmount: result.totalAmount * quantity,
-    };
+  actualWidth: result.actualWidth,
+  actualHeight: result.actualHeight,
+  billedWidth: result.billedWidth,
+  billedHeight: result.billedHeight,
+  sqFt: result.sqFt,
+  lite1Amount: result.lite1Amount * quantity,
+  lite2Amount: result.lite2Amount * quantity,
+  spacerAmount: result.spacerAmount * quantity,
+  materialsAmount: result.materialsAmount * quantity,
+  adjustedMaterialsAmount: result.adjustedMaterialsAmount * quantity,
+  taxAmount: result.taxAmount * quantity,
+  totalAmount: result.totalAmount * quantity,
+};
   }, [
     width,
     height,
@@ -83,24 +94,26 @@ export default function NewQuotePage() {
 
       <div>
         <label>Width: </label>
-        <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} />
+        <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value) || 0)} />
       </div>
 
       <div>
         <label>Height: </label>
-        <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} />
+        <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value) || 0)} />
       </div>
 
       <div>
         <label>Quantity: </label>
-        <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
+        <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value) || 1)} />
       </div>
 
       <div>
         <label>Lite 1: </label>
         <select value={lite1Id} onChange={(e) => setLite1Id(e.target.value)}>
           {GLASS_PRODUCTS.map((g) => (
-            <option key={g.id} value={g.id}>{g.name}</option>
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
           ))}
         </select>
       </div>
@@ -109,7 +122,9 @@ export default function NewQuotePage() {
         <label>Lite 2: </label>
         <select value={lite2Id} onChange={(e) => setLite2Id(e.target.value)}>
           {GLASS_PRODUCTS.map((g) => (
-            <option key={g.id} value={g.id}>{g.name}</option>
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
           ))}
         </select>
       </div>
@@ -118,17 +133,57 @@ export default function NewQuotePage() {
         <label>Spacer: </label>
         <select value={spacerId} onChange={(e) => setSpacerId(e.target.value)}>
           {SPACERS.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
           ))}
         </select>
       </div>
 
+      <div>
+        <label>Pricing Category: </label>
+        <select value={pricingCategoryId} onChange={(e) => setPricingCategoryId(e.target.value)}>
+          {PRICING_CATEGORIES.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label>Tax Rate: </label>
+        <select value={taxRateId} onChange={(e) => setTaxRateId(e.target.value)}>
+          {TAX_RATES.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={customerTaxExempt}
+            onChange={(e) => setCustomerTaxExempt(e.target.checked)}
+          />
+          Customer Tax Exempt
+        </label>
+      </div>
+
       <hr />
 
-      <h2>Totals</h2>
-      <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
-      <p>Materials: ${totals.materialsAmount.toFixed(2)}</p>
-      <p>Adjusted: ${totals.adjustedMaterialsAmount.toFixed(2)}</p>
+      <h2>Internal Cost Breakdown</h2>
+   <p>Actual Size: {totals.actualWidth} x {totals.actualHeight}</p>
+<p>Billed Size: {totals.billedWidth} x {totals.billedHeight}</p>
+<p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
+      <p>Lite 1 Cost: ${totals.lite1Amount.toFixed(2)}</p>
+      <p>Lite 2 Cost: ${totals.lite2Amount.toFixed(2)}</p>
+      <p>Spacer Cost: ${totals.spacerAmount.toFixed(2)}</p>
+      <p>Raw Materials: ${totals.materialsAmount.toFixed(2)}</p>
+      <p>Adjusted Materials: ${totals.adjustedMaterialsAmount.toFixed(2)}</p>
       <p>Tax: ${totals.taxAmount.toFixed(2)}</p>
       <p>Total: ${totals.totalAmount.toFixed(2)}</p>
     </main>
