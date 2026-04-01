@@ -31,10 +31,28 @@ const SPACERS = [
 function getById<T extends { id: string }>(items: T[], id: string): T {
   return items.find((item) => item.id === id) ?? items[0];
 }
+function parseDimension(value: string): number {
+  if (!value) return 0;
+
+  const trimmed = value.trim();
+
+  if (trimmed.includes(" ")) {
+    const [whole, fraction] = trimmed.split(" ");
+    const [num, den] = fraction.split("/");
+    return Number(whole) + Number(num) / Number(den);
+  }
+
+  if (trimmed.includes("/")) {
+    const [num, den] = trimmed.split("/");
+    return Number(num) / Number(den);
+  }
+
+  return Number(trimmed);
+}
 
 export default function NewQuotePage() {
-  const [width, setWidth] = useState(36);
-  const [height, setHeight] = useState(48);
+const [width, setWidth] = useState("36");
+const [height, setHeight] = useState("48");
   const [quantity, setQuantity] = useState(1);
   const [lite1Id, setLite1Id] = useState("clear18");
   const [lite2Id, setLite2Id] = useState("loe18");
@@ -50,9 +68,10 @@ export default function NewQuotePage() {
   const spacer = getById(SPACERS, spacerId);
 
   const totals = useMemo(() => {
-    const result = priceInsulatedUnit({
-      width,
-      height,
+const parsedWidth = parseDimension(width);
+const parsedHeight = parseDimension(height);const result = priceInsulatedUnit({
+  width: parsedWidth,
+  height: parsedHeight,
       lite1CostPerSqFt: lite1.costPerSqFt,
       lite2CostPerSqFt: lite2.costPerSqFt,
       spacerCostPerSqFt: spacer.costPerSqFt,
@@ -92,16 +111,23 @@ export default function NewQuotePage() {
     <main style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>Quote Builder</h1>
 
-      <div>
-        <label>Width: </label>
-        <input type="number" value={width} onChange={(e) => setWidth(Number(e.target.value) || 0)} />
-      </div>
+     <div>
+  <label>Width: </label>
+  <input
+    type="text"
+    value={width}
+    onChange={(e) => setWidth(e.target.value)}
+  />
+</div>
 
-      <div>
-        <label>Height: </label>
-        <input type="number" value={height} onChange={(e) => setHeight(Number(e.target.value) || 0)} />
-      </div>
-
+<div>
+  <label>Height: </label>
+  <input
+    type="text"
+    value={height}
+    onChange={(e) => setHeight(e.target.value)}
+  />
+</div>
       <div>
         <label>Quantity: </label>
         <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value) || 1)} />
