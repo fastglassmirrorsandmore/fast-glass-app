@@ -7,13 +7,11 @@ export function parseFractionalInches(input: string | number): number | null {
 
   const value = input.trim();
 
-  // Whole number or decimal
   if (/^\d+(\.\d+)?$/.test(value)) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  // Mixed number like "30 1/4"
   const mixedMatch = value.match(/^(\d+)\s+(\d+)\/(\d+)$/);
   if (mixedMatch) {
     const whole = Number(mixedMatch[1]);
@@ -32,7 +30,6 @@ export function parseFractionalInches(input: string | number): number | null {
     return whole + numerator / denominator;
   }
 
-  // Fraction only like "1/4"
   const fractionMatch = value.match(/^(\d+)\/(\d+)$/);
   if (fractionMatch) {
     const numerator = Number(fractionMatch[1]);
@@ -73,7 +70,6 @@ export function calculateBilledSquareFeet(
 
   const billedWidth = roundUpToNextEvenInch(widthInches);
   const billedHeight = roundUpToNextEvenInch(heightInches);
-
   const sqFt = (billedWidth * billedHeight) / 144;
 
   return Math.max(sqFt, minimumSqFt);
