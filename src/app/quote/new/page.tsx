@@ -52,6 +52,24 @@ export default function NewQuotePage() {
   const lite2 = getById(GLASS_PRODUCTS, lite2Id);
   const spacer = getById(SPACERS, spacerId);
 
+function formatThickness(value: number): string {
+  const fractions: Record<string, string> = {
+    "0.125": '1/8"',
+    "0.25": '1/4"',
+    "0.375": '3/8"',
+    "0.5": '1/2"',
+    "0.625": '5/8"',
+    "0.75": '3/4"',
+    "0.875": '7/8"',
+    "1": '1"',
+  };
+
+  const rounded = Number(value.toFixed(3)).toString();
+  return fractions[rounded] ?? `${value}"`;
+}
+
+  const overallThickness = lite1.thickness + spacer.thickness + lite2.thickness;
+
   const totals = useMemo(() => {
     const parsedWidth = parseFractionalInches(width);
     const parsedHeight = parseFractionalInches(height);
@@ -182,7 +200,9 @@ return (
           ))}
         </select>
       </div>
-
+<p>
+  <strong>OA:</strong> {formatThickness(overallThickness)}
+</p>
       <div>
         <label>Pricing Category: </label>
         <select value={pricingCategoryId} onChange={(e) => setPricingCategoryId(e.target.value)}>
