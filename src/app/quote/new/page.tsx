@@ -36,6 +36,8 @@ function getById<T extends { id: string }>(items: T[], id: string): T {
 export default function NewQuotePage() {
   const [width, setWidth] = useState("36");
   const [height, setHeight] = useState("48");
+  const [measurementType, setMeasurementType] = useState("actual");
+  const [finalMeasurementsRequired, setFinalMeasurementsRequired] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [lite1Id, setLite1Id] = useState("clear18");
   const [lite2Id, setLite2Id] = useState("loe18");
@@ -96,19 +98,48 @@ export default function NewQuotePage() {
     customerTaxExempt,
   ]);
 
-  return (
-    <main style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Quote Builder</h1>
+ 
+return (
+  <main style={{ padding: "20px", fontFamily: "Arial" }}>
+    <h1>Quote Builder</h1>
 
-      <div>
-        <label>Width: </label>
-        <input type="text" value={width} onChange={(e) => setWidth(e.target.value)} />
-      </div>
+    <div>
+      <label>Width: </label>
+      <input type="text" value={width} onChange={(e) => setWidth(e.target.value)} />
+    </div>
 
-      <div>
-        <label>Height: </label>
-        <input type="text" value={height} onChange={(e) => setHeight(e.target.value)} />
-      </div>
+    <div>
+      <label>Height: </label>
+      <input type="text" value={height} onChange={(e) => setHeight(e.target.value)} />
+    </div>
+
+    {/* 👉 ADD THIS RIGHT HERE 👇 */}
+    <div>
+      <label>Measurement Type: </label>
+      <select
+        value={measurementType}
+        onChange={(e) => setMeasurementType(e.target.value)}
+      >
+        <option value="actual">Actual</option>
+        <option value="block">Block</option>
+      </select>
+    </div>
+{measurementType === "block" && (
+  <p style={{ color: "red", fontWeight: "bold" }}>
+    See Original
+  </p>
+)}
+
+<div>
+  <label>
+    <input
+      type="checkbox"
+      checked={finalMeasurementsRequired}
+      onChange={(e) => setFinalMeasurementsRequired(e.target.checked)}
+    />
+    Final field measurements required before production.
+  </label>
+</div>
 
       <div>
         <label>Quantity: </label>
@@ -184,8 +215,6 @@ export default function NewQuotePage() {
           Customer Tax Exempt
         </label>
       </div>
-
-      <hr />
 
       <h2>Internal Cost Breakdown</h2>
 

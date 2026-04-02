@@ -11,6 +11,10 @@ export type InsulatedUnitPricingInput = {
 };
 
 export type InsulatedUnitPricingResult = {
+  actualWidth: number;
+  actualHeight: number;
+  billedWidth: number;
+  billedHeight: number;
   sqFt: number;
   lite1Amount: number;
   lite2Amount: number;
@@ -34,8 +38,11 @@ function roundUpToNextEven(value: number): number {
 export function priceInsulatedUnit(
   input: InsulatedUnitPricingInput
 ): InsulatedUnitPricingResult {
-  const billedWidth = roundUpToNextEven(input.width);
-  const billedHeight = roundUpToNextEven(input.height);
+  const actualWidth = input.width;
+  const actualHeight = input.height;
+
+  const billedWidth = roundUpToNextEven(actualWidth);
+  const billedHeight = roundUpToNextEven(actualHeight);
 
   const calculatedSqFt = (billedWidth * billedHeight) / 144;
   const sqFt = roundTo(Math.max(calculatedSqFt, 3), 4);
@@ -51,6 +58,10 @@ export function priceInsulatedUnit(
   const total = adjustedMaterials + tax;
 
   return {
+    actualWidth: roundTo(actualWidth, 4),
+    actualHeight: roundTo(actualHeight, 4),
+    billedWidth,
+    billedHeight,
     sqFt,
     lite1Amount: roundTo(lite1, 2),
     lite2Amount: roundTo(lite2, 2),
