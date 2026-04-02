@@ -16,17 +16,17 @@ const TAX_RATES = [
 ];
 
 const GLASS_PRODUCTS = [
-  { id: "clear18", name: 'Clear 1/8"', costPerSqFt: 7.5 },
-  { id: "loe18", name: 'Low-E 1/8"', costPerSqFt: 11.2 },
+  { id: "clear18", name: 'Clear 1/8"', costPerSqFt: 7.5, thickness: 0.125, thicknessLabel: '1/8"' },
+  { id: "loe18", name: 'Low-E 1/8"', costPerSqFt: 11.2, thickness: 0.125, thicknessLabel: '1/8"' },
 ];
 
 const SPACERS = [
-  { id: "quarter", name: '1/4"', costPerSqFt: 0.25 },
-  { id: "five16", name: '5/16"', costPerSqFt: 0.25 },
-  { id: "three8", name: '3/8"', costPerSqFt: 0.15 },
-  { id: "seven16", name: '7/16"', costPerSqFt: 0.3 },
-  { id: "half", name: '1/2"', costPerSqFt: 0.2 },
-  { id: "five8", name: '5/8"', costPerSqFt: 0.35 },
+  { id: "quarter", name: '1/4"', costPerSqFt: 0.25, thickness: 0.25, thicknessLabel: '1/4"' },
+  { id: "five16", name: '5/16"', costPerSqFt: 0.25, thickness: 0.3125, thicknessLabel: '5/16"' },
+  { id: "three8", name: '3/8"', costPerSqFt: 0.15, thickness: 0.375, thicknessLabel: '3/8"' },
+  { id: "seven16", name: '7/16"', costPerSqFt: 0.3, thickness: 0.4375, thicknessLabel: '7/16"' },
+  { id: "half", name: '1/2"', costPerSqFt: 0.2, thickness: 0.5, thicknessLabel: '1/2"' },
+  { id: "five8", name: '5/8"', costPerSqFt: 0.35, thickness: 0.625, thicknessLabel: '5/8"' },
 ];
 
 function getById<T extends { id: string }>(items: T[], id: string): T {
