@@ -39,6 +39,7 @@ export default function NewQuotePage() {
   const [measurementType, setMeasurementType] = useState("actual");
   const [finalMeasurementsRequired, setFinalMeasurementsRequired] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [showInternalPricing, setShowInternalPricing] = useState(true);
   const [lite1Id, setLite1Id] = useState("clear18");
   const [lite2Id, setLite2Id] = useState("loe18");
   const [spacerId, setSpacerId] = useState("half");
@@ -51,6 +52,7 @@ export default function NewQuotePage() {
   const lite1 = getById(GLASS_PRODUCTS, lite1Id);
   const lite2 = getById(GLASS_PRODUCTS, lite2Id);
   const spacer = getById(SPACERS, spacerId);
+  
 
 function formatThickness(value: number): string {
   const fractions: Record<string, string> = {
@@ -235,23 +237,37 @@ return (
           Customer Tax Exempt
         </label>
       </div>
+<div>
+  <label>
+    <input
+      type="checkbox"
+      checked={showInternalPricing}
+      onChange={(e) => setShowInternalPricing(e.target.checked)}
+    />
+    Show Internal Pricing
+  </label>
+</div>
 
-      <h2>Internal Cost Breakdown</h2>
+{showInternalPricing && (
+  <>
+    <h2>Internal Cost Breakdown</h2>
 
-      {totals ? (
-        <>
-          <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
-          <p>Lite 1 Cost: ${totals.lite1Amount.toFixed(2)}</p>
-          <p>Lite 2 Cost: ${totals.lite2Amount.toFixed(2)}</p>
-          <p>Spacer Cost: ${totals.spacerAmount.toFixed(2)}</p>
-          <p>Raw Materials: ${totals.materialsAmount.toFixed(2)}</p>
-          <p>Adjusted Materials: ${totals.adjustedMaterialsAmount.toFixed(2)}</p>
-          <p>Tax: ${totals.taxAmount.toFixed(2)}</p>
-          <p>Total: ${totals.totalAmount.toFixed(2)}</p>
-        </>
-      ) : (
-        <p>Enter a valid width and height.</p>
-      )}
+    {totals ? (
+      <>
+        <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
+        <p>Lite 1 Cost: ${totals.lite1Amount.toFixed(2)}</p>
+        <p>Lite 2 Cost: ${totals.lite2Amount.toFixed(2)}</p>
+        <p>Spacer Cost: ${totals.spacerAmount.toFixed(2)}</p>
+        <p>Raw Materials: ${totals.materialsAmount.toFixed(2)}</p>
+        <p>Adjusted Materials: ${totals.adjustedMaterialsAmount.toFixed(2)}</p>
+        <p>Tax: ${totals.taxAmount.toFixed(2)}</p>
+        <p>Total: ${totals.totalAmount.toFixed(2)}</p>
+      </>
+    ) : (
+      <p>Enter a valid width and height.</p>
+    )}
+  </>
+)}
     </main>
   );
 }
