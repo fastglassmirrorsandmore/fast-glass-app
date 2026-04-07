@@ -46,6 +46,11 @@ export default function NewQuotePage() {
   const [pricingCategoryId, setPricingCategoryId] = useState("retail");
   const [taxRateId, setTaxRateId] = useState("sample");
   const [customerTaxExempt, setCustomerTaxExempt] = useState(false);
+  const [showDimensionsOnQuote, setShowDimensionsOnQuote] = useState(false);
+  const [partCode, setPartCode] = useState("IGC6");
+  const [description, setDescription] = useState("Insulated ClimaGuard 70/36 Low-E");
+  const [laborAmount, setLaborAmount] = useState(0);
+
 
   const pricingCategory = getById(PRICING_CATEGORIES, pricingCategoryId);
   const taxRate = getById(TAX_RATES, taxRateId);
@@ -75,6 +80,7 @@ function formatThickness(value: number): string {
   const totals = useMemo(() => {
     const parsedWidth = parseFractionalInches(width);
     const parsedHeight = parseFractionalInches(height);
+
 
     if (parsedWidth === null || parsedHeight === null) {
       return null;
@@ -117,7 +123,14 @@ function formatThickness(value: number): string {
     taxRate,
     customerTaxExempt,
   ]);
+const customerSubtotal = totals ? totals.adjustedMaterialsAmount : 0;
+const customerTax = totals ? totals.taxAmount : 0;
+const customerTotal = customerSubtotal + laborAmount + customerTax;
+const priceEach = quantity > 0 ? customerSubtotal / quantity : 0;
 
+const lineDescription = showDimensionsOnQuote
+  ? `${partCode} - ${description} - ${formatThickness(overallThickness)} - ${width} X ${height}`
+  : `${partCode} - ${description} - ${formatThickness(overallThickness)}`;
  
 return (
   <main style={{ padding: "20px", fontFamily: "Arial" }}>
@@ -205,6 +218,44 @@ return (
 <p>
   <strong>OA:</strong> {formatThickness(overallThickness)}
 </p>
+<div>
+  <label>Part Code: </label>
+  <input
+    type="text"
+    value={partCode}
+    onChange={(e) => setPartCode(e.target.value)}
+  />
+</div>
+
+<div>
+  <label>Description: </label>
+  <input
+    type="text"
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+  />
+</div>
+
+<div>
+  <label>
+    <input
+      type="checkbox"
+      checked={showDimensionsOnQuote}
+      onChange={(e) => setShowDimensionsOnQuote(e.target.checked)}
+    />
+    Show Dimensions on Quote
+  </label>
+</div>
+
+<div>
+  <label>Labor: </label>
+  <input
+    type="number"
+    step="0.01"
+    value={laborAmount}
+    onChange={(e) => setLaborAmount(Number(e.target.value) || 0)}
+  />
+</div>
       <div>
         <label>Pricing Category: </label>
         <select value={pricingCategoryId} onChange={(e) => setPricingCategoryId(e.target.value)}>
@@ -248,10 +299,23 @@ return (
   </label>
 </div>
 
+
+<h2>Customer Quote Summary</h2>
+
+<p><strong>Qty:</strong> {quantity}</p>
+<p><strong>Part:</strong> {partCode}</p>
+<p><strong>Price Each:</strong> ${priceEach.toFixed(2)}</p>
+<p><strong>Line Total:</strong> ${customerSubtotal.toFixed(2)}</p>
+<p><strong>Description:</strong> {lineDescription}</p>
+<p><strong>Subtotal:</strong> ${customerSubtotal.toFixed(2)}</p>
+<p><strong>Labor:</strong> ${laborAmount.toFixed(2)}</p>
+<p><strong>Tax:</strong> ${customerTax.toFixed(2)}</p>
+<p><strong>Total:</strong> ${customerTotal.toFixed(2)}</p>
+<p><strong>Balance:</strong> ${customerTotal.toFixed(2)}</p>
+
 {showInternalPricing && (
   <>
     <h2>Internal Cost Breakdown</h2>
-
     {totals ? (
       <>
         <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
