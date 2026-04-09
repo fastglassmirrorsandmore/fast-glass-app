@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { priceInsulatedUnit } from "../../../lib/pricing/insulated-unit-pricing";
 import { parseFractionalInches } from "../../../lib/dimensions";
 
+const currency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
 const PRICING_CATEGORIES = [
   { id: "retail", name: "Retail", multiplier: 1.0 },
   { id: "contractor", name: "Contractor", multiplier: 0.9 },
@@ -49,15 +54,40 @@ export default function NewQuotePage() {
   const [showDimensionsOnQuote, setShowDimensionsOnQuote] = useState(false);
   const [partCode, setPartCode] = useState("IGC6");
   const [description, setDescription] = useState("Insulated ClimaGuard 70/36 Low-E");
-  const [laborAmount, setLaborAmount] = useState(0);
 
+const [laborItems, setLaborItems] = useState([
+  {
+    id: 1,
+    description: "Labor",
+    qty: "1",
+    rate: "0",
+  },
+]);
+  const [showTripCharge, setShowTripCharge] = useState(false);
+  const [tripChargeMiles, setTripChargeMiles] = useState("0");
+  const [tripChargeRate, setTripChargeRate] = useState("0.725");
+
+  const [quoteItems, setQuoteItems] = useState([
+    {
+    id: 1,
+    description: "",
+    quantity: 1,
+    partCode: "IGC6",
+    width: "36",
+    height: "48",
+    measurementType: "actual",
+    finalMeasurementsRequired: false,
+    oa: '3/4"',
+    lineTotal: 0,
+  },
+]);
 
   const pricingCategory = getById(PRICING_CATEGORIES, pricingCategoryId);
   const taxRate = getById(TAX_RATES, taxRateId);
   const lite1 = getById(GLASS_PRODUCTS, lite1Id);
   const lite2 = getById(GLASS_PRODUCTS, lite2Id);
   const spacer = getById(SPACERS, spacerId);
-  
+  const overallThickness = lite1.thickness + spacer.thickness + lite2.thickness; 
 
 function formatThickness(value: number): string {
   const fractions: Record<string, string> = {
@@ -75,67 +105,218 @@ function formatThickness(value: number): string {
   return fractions[rounded] ?? `${value}"`;
 }
 
-  const overallThickness = lite1.thickness + spacer.thickness + lite2.thickness;
-
-  const totals = useMemo(() => {
-    const parsedWidth = parseFractionalInches(width);
-    const parsedHeight = parseFractionalInches(height);
 
 
-    if (parsedWidth === null || parsedHeight === null) {
-      return null;
-    }
+const totals = useMemo(() => {
+  const parsedWidth = parseFractionalInches(width);
+  const parsedHeight = parseFractionalInches(height);
 
-    const result = priceInsulatedUnit({
-      width: parsedWidth,
-      height: parsedHeight,
-      lite1CostPerSqFt: lite1.costPerSqFt,
-      lite2CostPerSqFt: lite2.costPerSqFt,
-      spacerCostPerSqFt: spacer.costPerSqFt,
-      pricingCategoryMultiplier: pricingCategory.multiplier,
-      quoteTaxRate: taxRate.rate,
-      customerTaxExempt,
-      spacerOverride: false,
-    });
+  if (parsedWidth === null || parsedHeight === null) {
+    return null;
+  }
 
-    return {
-      actualWidth: result.actualWidth,
-      actualHeight: result.actualHeight,
-      billedWidth: result.billedWidth,
-      billedHeight: result.billedHeight,
-      sqFt: result.sqFt,
-      lite1Amount: result.lite1Amount * quantity,
-      lite2Amount: result.lite2Amount * quantity,
-      spacerAmount: result.spacerAmount * quantity,
-      materialsAmount: result.materialsAmount * quantity,
-      adjustedMaterialsAmount: result.adjustedMaterialsAmount * quantity,
-      taxAmount: result.taxAmount * quantity,
-      totalAmount: result.totalAmount * quantity,
-    };
-  }, [
-    width,
-    height,
-    quantity,
-    lite1,
-    lite2,
-    spacer,
-    pricingCategory,
-    taxRate,
+  const result = priceInsulatedUnit({
+    width: parsedWidth,
+    height: parsedHeight,
+    lite1CostPerSqFt: lite1.costPerSqFt,
+    lite2CostPerSqFt: lite2.costPerSqFt,
+    spacerCostPerSqFt: spacer.costPerSqFt,
+    pricingCategoryMultiplier: pricingCategory.multiplier,
+    quoteTaxRate: taxRate.rate,
     customerTaxExempt,
-  ]);
+    spacerOverride: false,
+  });
+
+  return {
+    actualWidth: parsedWidth,
+    actualHeight: parsedHeight,
+    sqFt: result.sqFt,
+    lite1Amount: result.lite1Amount * quantity,
+    lite2Amount: result.lite2Amount * quantity,
+    spacerAmount: result.spacerAmount * quantity,
+    materialsAmount: result.materialsAmount * quantity,
+    adjustedMaterialsAmount: result.adjustedMaterialsAmount * quantity,
+    taxAmount: result.taxAmount * quantity,
+    totalAmount: result.totalAmount * quantity,
+  };
+}, [
+  width,
+  height,
+  quantity,
+  lite1,
+  lite2,
+  spacer,
+  pricingCategory,
+  taxRate,
+  customerTaxExempt,
+]);
 const customerSubtotal = totals ? totals.adjustedMaterialsAmount : 0;
 const customerTax = totals ? totals.taxAmount : 0;
-const customerTotal = customerSubtotal + laborAmount + customerTax;
+const laborTotal = laborItems.reduce((sum, item) => {
+  return sum + (Number(item.qty) || 0) * (Number(item.rate) || 0);
+}, 0);
+const tripChargeTotal =
+  showTripCharge
+    ? (Number(tripChargeMiles) || 0) * (Number(tripChargeRate) || 0)
+    : 0;
+const customerTotal = customerSubtotal + laborTotal + tripChargeTotal + customerTax;
 const priceEach = quantity > 0 ? customerSubtotal / quantity : 0;
 
 const lineDescription = showDimensionsOnQuote
   ? `${partCode} - ${description} - ${formatThickness(overallThickness)} - ${width} X ${height}`
   : `${partCode} - ${description} - ${formatThickness(overallThickness)}`;
- 
+
+const displayQuoteItems = quoteItems.map((item, index) => {
+  if (index === 0) {
+    return {
+      ...item,
+      description: description,
+      quantity: quantity,
+      partCode: partCode,
+      width: width,
+      height: height,
+      measurementType: measurementType,
+      finalMeasurementsRequired: finalMeasurementsRequired,
+      oa: formatThickness(overallThickness),
+      lineTotal: customerSubtotal,
+    };
+  }
+
+  return item;
+});
+
 return (
   <main style={{ padding: "20px", fontFamily: "Arial" }}>
     <h1>Quote Builder</h1>
 
+<button
+  type="button"
+  onClick={() =>
+    setQuoteItems([
+      ...quoteItems,
+      {
+  id: Date.now(),
+  description: "",
+  quantity: 1,
+  partCode: "IGC6",
+  width: "",
+  height: "",
+  measurementType: "actual",
+  finalMeasurementsRequired: false,
+  oa: "",
+  lineTotal: 0,
+  },
+])
+  }
+>
+  Add Quote Item
+</button>
+<h2>Quote Items</h2>
+
+{displayQuoteItems.map((item) => (
+  <div
+    key={item.id}
+    style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}
+  >
+    <p><strong>Description:</strong> {item.description || "No description"}</p>
+    <p><strong>Qty:</strong> {item.quantity}</p>
+    <p><strong>Part:</strong> {item.partCode}</p>
+    <p>
+      <strong>{item.measurementType === "block" ? "Block Size:" : "Size:"}</strong>{" "}
+      {item.width} x {item.height}
+    </p>
+    <p><strong>OA:</strong> {formatThickness(overallThickness)}</p>
+    {item.measurementType === "block" && (
+      <p style={{ color: "red", fontWeight: "bold" }}>See Original</p>
+    )}
+    {item.finalMeasurementsRequired && (
+      <p style={{ color: "red", fontWeight: "bold" }}>
+        Final field measurements required before production.
+      </p>
+    )}
+    <p><strong>Line Total:</strong> ${item.lineTotal.toFixed(2)}</p>
+  </div>
+))}
+<div className="mt-6 rounded-xl border bg-white p-4">
+  <h2 className="mb-4 text-lg font-semibold">Labor</h2>
+<div className="grid gap-4 md:grid-cols-3">
+  <input
+    type="text"
+    value={laborItems[0].description}
+    onChange={(e) => {
+      const updated = [...laborItems];
+      updated[0].description = e.target.value;
+      setLaborItems(updated);
+    }}
+    placeholder="Labor Description"
+    className="border p-2"
+  />
+
+  <input
+    type="number"
+    value={laborItems[0].qty}
+    onChange={(e) => {
+      const updated = [...laborItems];
+      updated[0].qty = e.target.value;
+      setLaborItems(updated);
+    }}
+    placeholder="Qty"
+    className="border p-2"
+  />
+
+  <input
+    type="number"
+    value={laborItems[0].rate}
+    onChange={(e) => {
+      const updated = [...laborItems];
+      updated[0].rate = e.target.value;
+      setLaborItems(updated);
+    }}
+    placeholder="Rate"
+    className="border p-2"
+  />
+</div>
+
+  <div className="mt-3 text-sm">
+    Labor Total: {currency.format(laborTotal)}
+  </div>
+</div>
+<div className="mt-6 rounded-xl border bg-white p-4">
+  <label className="flex items-center gap-2 text-sm font-medium">
+    <input
+      type="checkbox"
+      checked={showTripCharge}
+      onChange={(e) => setShowTripCharge(e.target.checked)}
+    />
+    Add Trip Charge
+  </label>
+
+  {showTripCharge && (
+    <>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <input
+          type="number"
+          value={tripChargeMiles}
+          onChange={(e) => setTripChargeMiles(e.target.value)}
+          placeholder="TC Miles"
+          className="border p-2"
+        />
+
+        <input
+          type="number"
+          value={tripChargeRate}
+          onChange={(e) => setTripChargeRate(e.target.value)}
+          placeholder="TC Rate"
+          className="border p-2"
+        />
+      </div>
+
+      <div className="mt-3 text-sm">
+        Trip Charge Total: {currency.format(tripChargeTotal)}
+      </div>
+    </>
+  )}
+</div>
     <div>
       <label>Width: </label>
       <input type="text" value={width} onChange={(e) => setWidth(e.target.value)} />
@@ -247,15 +428,6 @@ return (
   </label>
 </div>
 
-<div>
-  <label>Labor: </label>
-  <input
-    type="number"
-    step="0.01"
-    value={laborAmount}
-    onChange={(e) => setLaborAmount(Number(e.target.value) || 0)}
-  />
-</div>
       <div>
         <label>Pricing Category: </label>
         <select value={pricingCategoryId} onChange={(e) => setPricingCategoryId(e.target.value)}>
@@ -302,13 +474,14 @@ return (
 
 <h2>Customer Quote Summary</h2>
 
-<p><strong>Qty:</strong> {quantity}</p>
-<p><strong>Part:</strong> {partCode}</p>
-<p><strong>Price Each:</strong> ${priceEach.toFixed(2)}</p>
-<p><strong>Line Total:</strong> ${customerSubtotal.toFixed(2)}</p>
-<p><strong>Description:</strong> {lineDescription}</p>
-<p><strong>Subtotal:</strong> ${customerSubtotal.toFixed(2)}</p>
-<p><strong>Labor:</strong> ${laborAmount.toFixed(2)}</p>
+<p><strong>Price Each:</strong> {currency.format(priceEach)}</p>
+<p><strong>Line Total:</strong> {currency.format(customerSubtotal)}</p>
+<p><strong>Subtotal:</strong> {currency.format(customerSubtotal)}</p>
+<p>Labor: {currency.format(laborTotal)}</p>
+<p><strong>Tax:</strong> {currency.format(customerTax)}</p>
+<p><strong>Total:</strong> {currency.format(customerTotal)}</p>
+<p><strong>Balance:</strong> {currency.format(customerTotal)}</p>
+<p>Labor: {currency.format(laborTotal)}</p>
 <p><strong>Tax:</strong> ${customerTax.toFixed(2)}</p>
 <p><strong>Total:</strong> ${customerTotal.toFixed(2)}</p>
 <p><strong>Balance:</strong> ${customerTotal.toFixed(2)}</p>
@@ -330,6 +503,37 @@ return (
     ) : (
       <p>Enter a valid width and height.</p>
     )}
+<div className="mt-6 rounded-xl border bg-white p-4">
+  <h2 className="mb-4 text-lg font-semibold">Totals</h2>
+
+  <div className="space-y-2 text-sm">
+    <div className="flex items-center justify-between">
+      <span>Materials Subtotal</span>
+      <span>{currency.format(customerSubtotal)}</span>
+    </div>
+
+    <div className="flex items-center justify-between">
+      <span>Labor</span>
+      <span>{currency.format(laborTotal)}</span>
+    </div>
+{showTripCharge && (
+  <div className="flex items-center justify-between">
+    <span>Trip Charge</span>
+    <span>{currency.format(tripChargeTotal)}</span>
+  </div>
+)}
+
+    <div className="flex items-center justify-between">
+      <span>Tax</span>
+      <span>{currency.format(customerTax)}</span>
+    </div>
+
+    <div className="flex items-center justify-between border-t pt-2 text-base font-semibold">
+      <span>Grand Total</span>
+      <span>{currency.format(customerTotal)}</span>
+    </div>
+  </div>
+</div>
   </>
 )}
     </main>
