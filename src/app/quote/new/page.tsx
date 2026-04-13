@@ -21,9 +21,9 @@ const currency = new Intl.NumberFormat("en-US", {
 });
 
 const PRICING_CATEGORIES = [
-  { id: "retail", name: "Retail", multiplier: 1.0 },
-  { id: "contractor", name: "Contractor", multiplier: 0.9 },
-  { id: "apartment", name: "Apartment", multiplier: 0.8 },
+  { id: "retail", name: "Retail", multiplier: 2.0 },
+  { id: "contractor", name: "Contractor", multiplier: 1.8 },
+  { id: "apartment", name: "Apartment", multiplier: 1.6 },
 ];
 
 const TAX_RATES = [
@@ -50,13 +50,12 @@ function getById<T extends { id: string }>(items: T[], id: string): T {
 }
 
 export default function NewQuotePage() {
-  const [width, setWidth] = useState("36");
-  const [height, setHeight] = useState("48");
+  const [width, setWidth] = useState("");
+  const [height, setHeight] = useState("");
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
   const [measurementType, setMeasurementType] = useState("actual");
   const [finalMeasurementsRequired, setFinalMeasurementsRequired] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [showInternalPricing, setShowInternalPricing] = useState(true);
   const [lite1Id, setLite1Id] = useState("clear18");
   const [lite2Id, setLite2Id] = useState("loe18");
   const [spacerId, setSpacerId] = useState("half");
@@ -64,6 +63,7 @@ export default function NewQuotePage() {
   const [taxRateId, setTaxRateId] = useState("sample");
   const [customerTaxExempt, setCustomerTaxExempt] = useState(false);
   const [showDimensionsOnQuote, setShowDimensionsOnQuote] = useState(false);
+  const [showFgmmCost, setShowFgmmCost] = useState(true);
   const [partCode, setPartCode] = useState("IGC6");
   const [description, setDescription] = useState("Insulated ClimaGuard 70/36 Low-E");
 useEffect(() => {
@@ -96,8 +96,6 @@ useEffect(() => {
   const [tripChargeMiles, setTripChargeMiles] = useState("0");
   const [tripChargeRate, setTripChargeRate] = useState("2.725");
 
-
-// ✅ PASTE FUNCTION HERE
 function handleAddUnit() {
   if (!width.trim() || !height.trim()) {
     alert("Please enter width and height.");
@@ -122,11 +120,11 @@ function handleAddUnit() {
   const newItem: QuoteItem = {
     id: crypto.randomUUID(),
     part: partCode,
-    description: description,
+    description,
     qty: quantity,
     width,
     height,
-    oa: overallThickness,
+    oa: formatThickness(overallThickness),
     lineTotal: priceEach * quantity,
   };
 
@@ -135,8 +133,8 @@ function handleAddUnit() {
   setWidth("");
   setHeight("");
   setQuantity(1);
-  setPartCode("");
-  setDescription("");
+  setPartCode("IGC6");
+  setDescription("Insulated ClimaGuard 70/36 Low-E");
 }
 
   const pricingCategory = getById(PRICING_CATEGORIES, pricingCategoryId);
@@ -146,18 +144,18 @@ function handleAddUnit() {
   const spacer = getById(SPACERS, spacerId);
   const overallThickness = lite1.thickness + spacer.thickness + lite2.thickness;
 
-  function formatThickness(value: number): string {
-    const fractions: Record<string, string> = {
-      "0.125": '1/8"',
-      "0.25": '1/4"',
-      "0.375": '3/8"',
-      "0.5": '1/2"',
-      "0.625": '5/8"',
-      "0.75": '3/4"',
-      "0.875": '7/8"',
-      "1": '1"',
-    };
-
+ function formatThickness(value: number): string {
+  const fractions: Record<string, string> = {
+    "0.125": '1/8"',
+    "0.25": '1/4"',
+    "0.375": '3/8"',
+    "0.5": '1/2"',
+    "0.5625": '9/16"',
+    "0.625": '5/8"',
+    "0.75": '3/4"',
+    "0.875": '7/8"',
+    "1": '1"',
+  };
     const rounded = Number(value.toFixed(3)).toString();
     return fractions[rounded] ?? `${value}"`;
   }
@@ -182,18 +180,15 @@ function handleAddUnit() {
       spacerOverride: false,
     });
 
-    return {
-      actualWidth: parsedWidth,
-      actualHeight: parsedHeight,
-      sqFt: result.sqFt,
-      lite1Amount: result.lite1Amount * quantity,
-      lite2Amount: result.lite2Amount * quantity,
-      spacerAmount: result.spacerAmount * quantity,
-      materialsAmount: result.materialsAmount * quantity,
-      adjustedMaterialsAmount: result.adjustedMaterialsAmount * quantity,
-      taxAmount: result.taxAmount * quantity,
-      totalAmount: result.totalAmount * quantity,
-    };
+return {
+  actualWidth: parsedWidth,
+  actualHeight: parsedHeight,
+  sqFt: result.sqFt,
+  lite1Amount: result.lite1Amount * quantity,
+  lite2Amount: result.lite2Amount * quantity,
+  spacerAmount: result.spacerAmount * quantity,
+  materialsAmount: result.materialsAmount * quantity,
+};
   }, [
     width,
     height,
@@ -206,52 +201,74 @@ function handleAddUnit() {
     customerTaxExempt,
   ]);
 
-  const customerSubtotal = totals ? totals.adjustedMaterialsAmount : 0;
-  const customerTax = totals ? totals.taxAmount : 0;
+ const laborTotal = laborItems.reduce((sum, item) => {
+  const calculated = (Number(item.hours) || 0) * (Number(item.rate) || 0);
+  const finalAmount =
+    item.override !== "" ? (Number(item.override) || 0) : calculated;
 
-  const laborTotal = laborItems.reduce((sum, item) => {
-    const calculated = (Number(item.hours) || 0) * (Number(item.rate) || 0);
-    const finalAmount =
-      item.override !== "" ? (Number(item.override) || 0) : calculated;
+  return sum + finalAmount;
+}, 0);
 
-    return sum + finalAmount;
-  }, 0);
+const tripChargeTotal = showTripCharge
+  ? (Number(tripChargeMiles) || 0) * (Number(tripChargeRate) || 0)
+  : 0;
 
-  const tripChargeTotal = showTripCharge
-    ? (Number(tripChargeMiles) || 0) * (Number(tripChargeRate) || 0)
-    : 0;
+const materialSubtotal = quoteItems.reduce(
+  (sum, item) => sum + item.lineTotal,
+  0
+);
 
-  const customerTotal =
-    customerSubtotal + laborTotal + tripChargeTotal + customerTax;
+const customerSubtotal = materialSubtotal;
+const customerTax = customerTaxExempt ? 0 : materialSubtotal * taxRate.rate;
+const customerTotal =
+  customerSubtotal + laborTotal + tripChargeTotal + customerTax;
 
-  const priceEach = quantity > 0 ? customerSubtotal / quantity : 0;
+const priceEach = totals
+  ? totals.materialsAmount * pricingCategory.multiplier
+  : 0;
 
-  const lineDescription = showDimensionsOnQuote
-    ? `${partCode} - ${description} - ${formatThickness(overallThickness)} - ${width} X ${height}`
-    : `${partCode} - ${description} - ${formatThickness(overallThickness)}`;
+const lineDescription = showDimensionsOnQuote
+  ? `${partCode} - ${description} - ${formatThickness(overallThickness)} - ${width} X ${height}`
+  : `${partCode} - ${description} - ${formatThickness(overallThickness)}`;
 
-  const displayQuoteItems = quoteItems.map((item, index) => {
-    if (index === 0) {
-      return {
-        ...item,
-        description,
-        quantity,
-        partCode,
-        width,
-        height,
-        measurementType,
-        finalMeasurementsRequired,
-        oa: formatThickness(overallThickness),
-        lineTotal: customerSubtotal,
-      };
-    }
-
-    return item;
-  });
+const displayQuoteItems = quoteItems;
 
   return (
     <main style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1 style={{ marginBottom: "20px" }}>Quote Builder</h1>
+<div style={{ marginBottom: "16px" }}>
+  <button
+    onClick={() => {
+      setQuoteItems([]);
+      setLaborItems([
+        {
+          id: 1,
+          description: "Labor",
+          hours: "0",
+          rate: "120",
+          override: "",
+          note: "",
+          showNoteOnQuote: false,
+        },
+      ]);
+      setShowTripCharge(false);
+      setTripChargeMiles("0");
+      setTripChargeRate("2.725");
+    }}
+    style={{
+      padding: "8px 14px",
+      background: "#d9534f",
+      color: "#fff",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+    }}
+  >
+    New Quote
+  </button>
+</div>
+
+
 
       <div
         style={{
@@ -262,28 +279,6 @@ function handleAddUnit() {
         }}
       >
         <div>
-          <button
-            type="button"
-            onClick={() =>
-              setQuoteItems([
-                ...quoteItems,
-                {
-                  id: Date.now(),
-                  description: "",
-                  quantity: 1,
-                  partCode: "IGC6",
-                  width: "",
-                  height: "",
-                  measurementType: "actual",
-                  finalMeasurementsRequired: false,
-                  oa: "",
-                  lineTotal: 0,
-                },
-              ])
-            }
-          >
-            Add Quote Item
-          </button>
 
           <h2>Quote Items</h2>
 
@@ -292,23 +287,12 @@ function handleAddUnit() {
               key={item.id}
               style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}
             >
-              <p><strong>Description:</strong> {item.description || "No description"}</p>
-              <p><strong>Qty:</strong> {item.quantity}</p>
-              <p><strong>Part:</strong> {item.partCode}</p>
-              <p>
-                <strong>{item.measurementType === "block" ? "Block Size:" : "Size:"}</strong>{" "}
-                {item.width} x {item.height}
-              </p>
-              <p><strong>OA:</strong> {formatThickness(overallThickness)}</p>
-              {item.measurementType === "block" && (
-                <p style={{ color: "red", fontWeight: "bold" }}>See Original</p>
-              )}
-              {item.finalMeasurementsRequired && (
-                <p style={{ color: "red", fontWeight: "bold" }}>
-                  Final field measurements required before production.
-                </p>
-              )}
-              <p><strong>Line Total:</strong> {currency.format(item.lineTotal)}</p>
+             <p><strong>Description:</strong> {item.description || "No description"}</p>
+             <p><strong>Qty:</strong> {item.qty}</p>
+             <p><strong>Part:</strong> {item.part}</p>
+             <p><strong>Size:</strong> {item.width} x {item.height}</p>
+             <p><strong>OA:</strong> {item.oa}</p>
+             <p><strong>Line Total:</strong> {currency.format(item.lineTotal)}</p>
             </div>
           ))}
 
@@ -610,70 +594,86 @@ function handleAddUnit() {
             </label>
           </div>
 
-          <div>
-            <label>
-              <input
-                type="checkbox"
-                checked={showInternalPricing}
-                onChange={(e) => setShowInternalPricing(e.target.checked)}
-              />
-              Show Internal Pricing
-            </label>
-          </div>
+       
         </div>
 
-        <div>
-          <div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
-            <h2 style={{ marginTop: 0 }}>Customer Quote Summary</h2>
-            <p><strong>Price Each:</strong> {currency.format(priceEach)}</p>
-            <p><strong>Line Total:</strong> {currency.format(customerSubtotal)}</p>
-            <p><strong>Subtotal:</strong> {currency.format(customerSubtotal)}</p>
-            <p>Labor: {currency.format(laborTotal)}</p>
 
-            {laborItems
-              .filter((item) => item.showNoteOnQuote && item.note.trim() !== "")
-              .map((item) => (
-                <p key={item.id}><strong>Labor Note:</strong> {item.note}</p>
-              ))}
+ <div>
 
-            <p><strong>Tax:</strong> {currency.format(customerTax)}</p>
-            <p><strong>Total:</strong> {currency.format(customerTotal)}</p>
-            <p><strong>Balance:</strong> {currency.format(customerTotal)}</p>
-          </div>
+ <div style={{ marginBottom: "12px" }}>
+  <label>
+    <input
+      type="checkbox"
+      checked={showFgmmCost}
+      onChange={(e) => setShowFgmmCost(e.target.checked)}
+    />{" "}
+    Show FGMM Cost Breakdown
+  </label>
+</div>
 
-          <div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
-            <h2 style={{ marginTop: 0 }}>Totals</h2>
+<div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
+  <h3 style={{ marginTop: 0 }}>Unit Pricing (FGMM Cost + Tier Pricing)</h3>
+  <p><strong>Width x Height:</strong> {width} x {height}</p>
+  <p><strong>OA:</strong> {formatThickness(overallThickness)}</p>
+  <p><strong>Lite 1:</strong> {lite1.name} — {currency.format(lite1.costPerSqFt)}/sq ft</p>
+  <p><strong>Spacer:</strong> {spacer.name} — {currency.format(spacer.costPerSqFt)}/sq ft</p>
+  <p><strong>Lite 2:</strong> {lite2.name} — {currency.format(lite2.costPerSqFt)}/sq ft</p>
 
-            <div>
-              <p><strong>Materials Subtotal:</strong> {currency.format(customerSubtotal)}</p>
-              <p><strong>Labor:</strong> {currency.format(laborTotal)}</p>
-              {showTripCharge && (
-                <p><strong>Trip Charge:</strong> {currency.format(tripChargeTotal)}</p>
-              )}
-              <p><strong>Tax:</strong> {currency.format(customerTax)}</p>
-              <p><strong>Grand Total:</strong> {currency.format(customerTotal)}</p>
-            </div>
-          </div>
+  {totals ? (
+    <>
+      {showFgmmCost && (
+        <>
+          <p><strong>Lite 1 Cost:</strong> {currency.format(totals.lite1Amount)}</p>
+          <p><strong>Spacer Cost:</strong> {currency.format(totals.spacerAmount)}</p>
+          <p><strong>Lite 2 Cost:</strong> {currency.format(totals.lite2Amount)}</p>
+          <p><strong>FGMM Material Cost:</strong> {currency.format(totals.materialsAmount)}</p>
+        </>
+      )}
 
-          {showInternalPricing && (
-            <div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
-              <h2 style={{ marginTop: 0 }}>Internal Cost Breakdown</h2>
-              {totals ? (
-                <>
-                  <p>Sq Ft: {totals.sqFt.toFixed(2)}</p>
-                  <p>Lite 1 Cost: {currency.format(totals.lite1Amount)}</p>
-                  <p>Lite 2 Cost: {currency.format(totals.lite2Amount)}</p>
-                  <p>Spacer Cost: {currency.format(totals.spacerAmount)}</p>
-                  <p>Raw Materials: {currency.format(totals.materialsAmount)}</p>
-                  <p>Adjusted Materials: {currency.format(totals.adjustedMaterialsAmount)}</p>
-                  <p>Tax: {currency.format(totals.taxAmount)}</p>
-                  <p>Total: {currency.format(totals.totalAmount)}</p>
-                </>
-              ) : (
-                <p>Enter a valid width and height.</p>
-              )}
-            </div>
-          )}
+      <p><strong>Retail (x2):</strong> {currency.format(totals.materialsAmount * 2)}</p>
+      <p><strong>Contractor:</strong> {currency.format(totals.materialsAmount * 1.8)}</p>
+      <p><strong>Apartment:</strong> {currency.format(totals.materialsAmount * 1.6)}</p>
+
+      <p><strong>Price Each:</strong> {currency.format(priceEach)}</p>
+      <p><strong>Line Total:</strong> {currency.format(priceEach * quantity)}</p>
+    </>
+  ) : (
+    <p>Enter a valid width and height.</p>
+  )}
+</div>
+  <div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
+    <h2 style={{ marginTop: 0 }}>Quote Summary</h2>
+    <p><strong>Subtotal:</strong> {currency.format(materialSubtotal)}</p>
+    <p>Labor: {currency.format(laborTotal)}</p>
+
+    {laborItems
+      .filter((item) => item.showNoteOnQuote && item.note.trim() !== "")
+      .map((item) => (
+        <p key={item.id}><strong>Labor Note:</strong> {item.note}</p>
+      ))}
+
+    <p><strong>Tax:</strong> {currency.format(customerTax)}</p>
+    <p><strong>Total:</strong> {currency.format(customerTotal)}</p>
+    <p><strong>Balance:</strong> {currency.format(customerTotal)}</p>
+  </div>
+  
+
+<div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
+    <h2 style={{ marginTop: 0 }}>Totals</h2>
+
+    <div>
+      <p><strong>Materials Subtotal:</strong> {currency.format(materialSubtotal)}</p>
+      <p><strong>Labor:</strong> {currency.format(laborTotal)}</p>
+      {showTripCharge && (
+        <p><strong>Trip Charge:</strong> {currency.format(tripChargeTotal)}</p>
+      )}
+      <p><strong>Tax:</strong> {currency.format(customerTax)}</p>
+      <p><strong>Grand Total:</strong> {currency.format(customerTotal)}</p>
+    </div>
+  </div>
+
+
+
         </div>
       </div>
     </main>
