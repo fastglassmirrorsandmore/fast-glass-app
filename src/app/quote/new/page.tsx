@@ -8,6 +8,7 @@ type QuoteItem = {
   id: string;
   part: string;
   description: string;
+  location: string;
   qty: number;
   width: string;
   height: string;
@@ -66,6 +67,7 @@ export default function NewQuotePage() {
   const [showFgmmCost, setShowFgmmCost] = useState(true);
   const [partCode, setPartCode] = useState("IGC6");
   const [description, setDescription] = useState("Insulated ClimaGuard 70/36 Low-E");
+  const [location, setLocation] = useState("");
 useEffect(() => {
   if (partCode === "IGC6") {
     setDescription("Insulated ClimaGuard 70/36 Low-E");
@@ -121,6 +123,7 @@ function handleAddUnit() {
     id: crypto.randomUUID(),
     part: partCode,
     description,
+    location,
     qty: quantity,
     width,
     height,
@@ -183,11 +186,10 @@ function handleAddUnit() {
 return {
   actualWidth: parsedWidth,
   actualHeight: parsedHeight,
-  sqFt: result.sqFt,
-  lite1Amount: result.lite1Amount * quantity,
-  lite2Amount: result.lite2Amount * quantity,
-  spacerAmount: result.spacerAmount * quantity,
-  materialsAmount: result.materialsAmount * quantity,
+  sqFt: result.sqFt,lite1Amount: result.lite1Amount,
+lite2Amount: result.lite2Amount,
+spacerAmount: result.spacerAmount,
+materialsAmount: result.materialsAmount,
 };
   }, [
     width,
@@ -282,17 +284,136 @@ const displayQuoteItems = quoteItems;
 
           <h2>Quote Items</h2>
 
-          {displayQuoteItems.map((item) => (
+          {displayQuoteItems.map((item, index) => (
             <div
               key={item.id}
-              style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}
+              style={{
+  border: "1px solid #ccc",
+  borderRadius: "6px",
+  padding: "12px",
+  marginBottom: "12px",
+  background: "#fff",
+}}
             >
-             <p><strong>Description:</strong> {item.description || "No description"}</p>
-             <p><strong>Qty:</strong> {item.qty}</p>
-             <p><strong>Part:</strong> {item.part}</p>
-             <p><strong>Size:</strong> {item.width} x {item.height}</p>
-             <p><strong>OA:</strong> {item.oa}</p>
-             <p><strong>Line Total:</strong> {currency.format(item.lineTotal)}</p>
+           <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "6px",
+  }}
+><div>
+  <strong>{item.part}</strong>
+
+  <input
+    type="text"
+    value={item.location}
+    onChange={(e) => {
+      const newLocation = e.target.value;
+
+      setQuoteItems((prev) =>
+        prev.map((quoteItem) =>
+          quoteItem.id === item.id
+            ? { ...quoteItem, location: newLocation }
+            : quoteItem
+        )
+      );
+    }}
+    placeholder="Unit Location"
+    style={{
+      display: "block",
+      marginTop: "4px",
+      fontSize: "12px",
+      width: "160px",
+    }}
+  />
+</div>
+
+  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}><div style={{ textAlign: "right" }}>
+  <div>
+    <strong>{currency.format(item.lineTotal)}</strong>
+  </div>
+
+  <div style={{ fontSize: "12px", color: "#666" }}>
+    {currency.format(item.lineTotal / item.qty)} each
+  </div>
+</div>
+
+  <button
+    onClick={() =>
+      setQuoteItems((prev) => [
+        ...prev,
+        {
+          ...item,
+          id: crypto.randomUUID(),
+        },
+      ])
+    }
+    style={{
+      background: "#0275d8",
+      color: "#fff",
+      border: "none",
+      borderRadius: "4px",
+      padding: "4px 8px",
+      cursor: "pointer",
+    }}
+  >
+    Duplicate
+  </button>
+
+  <button
+    onClick={() =>
+      setQuoteItems((prev) =>
+        prev.filter((quoteItem) => quoteItem.id !== item.id)
+      )
+    }
+      style={{
+        background: "#d9534f",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        padding: "4px 8px",
+        cursor: "pointer",
+      }}
+    >
+      Delete
+    </button>
+  </div>
+</div>
+
+<div style={{ fontSize: "14px", marginBottom: "6px" }}>
+  {item.description}
+</div>
+
+
+
+<div style={{ fontSize: "14px", color: "#555" }}>
+<input
+  type="number"
+  min="1"
+  value={item.qty}
+  onChange={(e) => {
+    const newQty = Number(e.target.value) || 1;
+
+    setQuoteItems((prev) =>
+      prev.map((quoteItem) =>
+        quoteItem.id === item.id
+          ? {
+              ...quoteItem,
+              qty: newQty,
+              lineTotal:
+                (quoteItem.lineTotal / quoteItem.qty) * newQty,
+            }
+          : quoteItem
+      )
+    );
+  }}
+  style={{
+    width: "60px",
+    marginRight: "8px",
+  }}
+/> | Size: {item.width} x {item.height} | OA: {item.oa}
+</div>
             </div>
           ))}
 
@@ -463,6 +584,19 @@ const displayQuoteItems = quoteItems;
   <button type="button" onClick={handleAddUnit}>
     Add Unit to Quote
   </button>
+<button
+  type="button"
+  onClick={() => {
+    setWidth("");
+    setHeight("");
+    setQuantity(1);
+    setPartCode("IGC6");
+    setDescription("Insulated ClimaGuard 70/36 Low-E");
+  }}
+  style={{ marginLeft: "8px" }}
+>
+  Clear Current Unit
+</button>
 </div>
             <label>Measurement Type: </label>
             <select value={measurementType} onChange={(e) => setMeasurementType(e.target.value)}>
@@ -541,19 +675,29 @@ const displayQuoteItems = quoteItems;
             />
           </div>
 
-          <div>
-            <label>Description: </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+<div>
+  <label>Description: </label>
+  <input
+    type="text"
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+  />
+</div>
 
-          <div>
-            <label>
-              <input
-                type="checkbox"
+<div>
+  <label>Unit Location: </label>
+  <input
+    type="text"
+    value={location}
+    onChange={(e) => setLocation(e.target.value)}
+    placeholder="Window 1, Front Left, Over Sink..."
+  />
+</div>
+
+<div>
+  <label>
+    <input
+      type="checkbox"
                 checked={showDimensionsOnQuote}
                 onChange={(e) => setShowDimensionsOnQuote(e.target.checked)}
               />
