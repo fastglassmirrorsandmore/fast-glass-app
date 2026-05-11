@@ -12,6 +12,12 @@ type QuoteItem = {
   qty: number;
   width: string;
   height: string;
+
+  lite1Id: string;
+  lite2Id: string;
+  spacerId: string;
+  pricingCategoryId: string;
+
   oa: string;
   lineTotal: number;
 };
@@ -127,6 +133,10 @@ function handleAddUnit() {
     qty: quantity,
     width,
     height,
+    lite1Id,
+    lite2Id,
+    spacerId,
+    pricingCategoryId,
     oa: formatThickness(overallThickness),
     lineTotal: priceEach * quantity,
   };
@@ -147,7 +157,7 @@ function handleAddUnit() {
   const spacer = getById(SPACERS, spacerId);
   const overallThickness = lite1.thickness + spacer.thickness + lite2.thickness;
 
- function formatThickness(value: number): string {
+function formatThickness(value: number): string {
   const fractions: Record<string, string> = {
     "0.125": '1/8"',
     "0.25": '1/4"',
@@ -159,10 +169,43 @@ function handleAddUnit() {
     "0.875": '7/8"',
     "1": '1"',
   };
-    const rounded = Number(value.toFixed(3)).toString();
-    return fractions[rounded] ?? `${value}"`;
+
+  const rounded = Number(value.toFixed(3)).toString();
+  return fractions[rounded] ?? `${value}"`;
+}
+
+function calculateQuoteItemLineTotal(
+  item: QuoteItem,
+  newWidth: string,
+  newHeight: string,
+  newQty: number
+): number {
+  const parsedWidth = parseFractionalInches(newWidth);
+  const parsedHeight = parseFractionalInches(newHeight);
+
+  if (parsedWidth === null || parsedHeight === null) {
+    return item.lineTotal;
   }
 
+  const itemLite1 = getById(GLASS_PRODUCTS, item.lite1Id);
+  const itemLite2 = getById(GLASS_PRODUCTS, item.lite2Id);
+  const itemSpacer = getById(SPACERS, item.spacerId);
+  const itemPricingCategory = getById(PRICING_CATEGORIES, item.pricingCategoryId);
+
+  const result = priceInsulatedUnit({
+    width: parsedWidth,
+    height: parsedHeight,
+    lite1CostPerSqFt: itemLite1.costPerSqFt,
+    lite2CostPerSqFt: itemLite2.costPerSqFt,
+    spacerCostPerSqFt: itemSpacer.costPerSqFt,
+    pricingCategoryMultiplier: itemPricingCategory.multiplier,
+    quoteTaxRate: 0,
+    customerTaxExempt: true,
+    spacerOverride: false,
+  });
+
+  return result.adjustedMaterialsAmount * newQty;
+}
   const totals = useMemo(() => {
     const parsedWidth = parseFractionalInches(width);
     const parsedHeight = parseFractionalInches(height);
@@ -384,35 +427,95 @@ const displayQuoteItems = quoteItems;
 <div style={{ fontSize: "14px", marginBottom: "6px" }}>
   {item.description}
 </div>
-
-
-
 <div style={{ fontSize: "14px", color: "#555" }}>
-<input
-  type="number"
-  min="1"
-  value={item.qty}
-  onChange={(e) => {
-    const newQty = Number(e.target.value) || 1;
+  Qty:{" "}
+  <input
+    type="number"
+    min="1"
+    value={item.qty}
+    onChange={(e) => {
+      const newQty = Number(e.target.value) || 1;
 
-    setQuoteItems((prev) =>
-      prev.map((quoteItem) =>
-        quoteItem.id === item.id
-          ? {
-              ...quoteItem,
-              qty: newQty,
-              lineTotal:
-                (quoteItem.lineTotal / quoteItem.qty) * newQty,
-            }
-          : quoteItem
-      )
-    );
-  }}
-  style={{
-    width: "60px",
-    marginRight: "8px",
-  }}
-/> | Size: {item.width} x {item.height} | OA: {item.oa}
+      setQuoteItems((prev) =>
+        prev.map((quoteItem) =>
+          quoteItem.id === item.id
+            ? {
+                ...quoteItem,
+                qty: newQty,
+                lineTotal: calculateQuoteItemLineTotal(
+                  quoteItem,
+                  quoteItem.width,
+                  quoteItem.height,
+                  newQty
+                ),
+              }
+            : quoteItem
+        )
+      );
+    }}
+    style={{ width: "60px", marginRight: "8px" }}
+  />
+
+  {" | Size: "}
+  <input
+    type="text"
+    value={item.width}
+    onChange={(e) => {
+      const newWidth = e.target.value;
+
+      setQuoteItems((prev) =>
+        prev.map((quoteItem) =>
+          quoteItem.id === item.id
+            ? {
+                ...quoteItem,
+                width: newWidth,
+                lineTotal: calculateQuoteItemLineTotal(
+                  quoteItem,
+                  newWidth,
+                  quoteItem.height,
+                  quoteItem.qty
+                ),
+              }
+            : quoteItem
+        )
+      );
+    }}
+    style={{ width: "70px" }}
+  />
+
+  {" x "}
+  <input
+    type="text"
+    value={item.height}
+    onChange={(e) => {
+      const newHeight = e.target.value;
+
+      setQuoteItems((prev) =>
+        prev.map((quoteItem) =>
+          quoteItem.id === item.id
+            ? {
+                ...quoteItem,
+                height: newHeight,
+                lineTotal: calculateQuoteItemLineTotal(
+                  quoteItem,
+                  quoteItem.width,
+                  newHeight,
+                  quoteItem.qty
+                ),
+              }
+            : quoteItem
+        )
+      );
+    }}
+    style={{ width: "70px" }}
+  />
+
+  {" | OA: "}
+  {item.oa}
+
+  <div style={{ fontSize: "12px", color: "#b36b00", marginTop: "4px" }}>
+    Size edits recalculate pricing using the current temporary formula.
+  </div>
 </div>
             </div>
           ))}
