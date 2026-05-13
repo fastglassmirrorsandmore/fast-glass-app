@@ -73,7 +73,7 @@ export default function NewQuotePage() {
   const [showFgmmCost, setShowFgmmCost] = useState(true);
   const [partCode, setPartCode] = useState("IGC6");
   const [description, setDescription] = useState("Insulated ClimaGuard 70/36 Low-E");
-  const [location, setLocation] = useState("");
+  
 useEffect(() => {
   if (partCode === "IGC6") {
     setDescription("Insulated ClimaGuard 70/36 Low-E");
@@ -103,6 +103,27 @@ useEffect(() => {
   const [showTripCharge, setShowTripCharge] = useState(false);
   const [tripChargeMiles, setTripChargeMiles] = useState("0");
   const [tripChargeRate, setTripChargeRate] = useState("2.725");
+const [contractorCustomerId, setContractorCustomerId] = useState("");
+const [contractorCompany, setContractorCompany] = useState("");
+const [contractorContact, setContractorContact] = useState("");
+const [contractorStreet, setContractorStreet] = useState("");
+const [contractorCity, setContractorCity] = useState("");
+const [contractorState, setContractorState] = useState("");
+const [contractorZip, setContractorZip] = useState("");
+const [homeownerName, setHomeownerName] = useState("");
+const [jobSiteAddress, setJobSiteAddress] = useState("");
+const [homeownerPhone, setHomeownerPhone] = useState("");
+
+
+
+const [unitLocation, setUnitLocation] = useState("");
+const [jobStreet, setJobStreet] = useState("");
+const [jobCity, setJobCity] = useState("");
+const [jobState, setJobState] = useState("");
+const [jobZip, setJobZip] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("deposit");
+  const [paymentResponsible, setPaymentResponsible] = useState("customer");
+  const [techPaymentNote, setTechPaymentNote] = useState("");
 
 function handleAddUnit() {
   if (!width.trim() || !height.trim()) {
@@ -129,7 +150,7 @@ function handleAddUnit() {
     id: crypto.randomUUID(),
     part: partCode,
     description,
-    location,
+    location: unitLocation,
     qty: quantity,
     width,
     height,
@@ -278,13 +299,144 @@ const lineDescription = showDimensionsOnQuote
 
 const displayQuoteItems = quoteItems;
 
-  return (
-    <main style={{ padding: "20px", fontFamily: "Arial" }}>
+return (<main
+  style={{
+    padding: "20px",
+    fontFamily: "Arial",
+    maxWidth: "1200px",
+    margin: "0 auto",
+  }}
+>
       <h1 style={{ marginBottom: "20px" }}>Quote Builder</h1>
+<div
+  style={{
+    border: "1px solid #ccc",
+    padding: "16px",
+    marginBottom: "20px",
+    background: "#fafafa",
+  }}
+>
+  <h2 style={{ marginTop: 0 }}>Customer / Job Information</h2>
+
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+    <div>
+      <h3>Contractor / Billing</h3>
+<div style={{ display: "grid", gap: "8px" }}>
+  <label>
+    Customer ID
+    <input
+      value={contractorCustomerId}
+      onChange={(e) => setContractorCustomerId(e.target.value)}
+    />
+  </label>
+<label>
+  Company Name
+  <input
+    value={contractorCompany}
+    onChange={(e) => setContractorCompany(e.target.value)}
+  />
+</label>
+
+<label>
+  Contact Name
+  <input
+    value={contractorContact}
+    onChange={(e) => setContractorContact(e.target.value)}
+  />
+</label>
+
+<label>
+  Street
+  <input
+    value={contractorStreet}
+    onChange={(e) => setContractorStreet(e.target.value)}
+  />
+</label>
+
+<div className="grid grid-cols-3 gap-2">
+  <label>
+    City
+    <input
+      value={contractorCity}
+      onChange={(e) => setContractorCity(e.target.value)}
+    />
+  </label>
+
+  <label>
+    State
+    <input
+      value={contractorState}
+      onChange={(e) => setContractorState(e.target.value)}
+    />
+  </label>
+
+  <label>
+    ZIP
+    <input
+      value={contractorZip}
+      onChange={(e) => setContractorZip(e.target.value)}
+    />
+  </label>
+</div>
+</div>
+
+   </div>
+    </div>
+
+    <div>
+      <h3>Homeowner / Job Site</h3>
+<div style={{ display: "grid", gap: "8px" }}>
+
+<label>
+  Homeowner Name
+  <input
+    value={homeownerName}
+    onChange={(e) => setHomeownerName(e.target.value)}
+  />
+</label>
+<label>
+  Phone
+  <input
+  value={homeownerPhone}
+  onChange={(e) => setHomeownerPhone(e.target.value)}
+/>
+</label>
+
+<label>
+  Job Site Address
+  <input
+    value={jobSiteAddress}
+    onChange={(e) => setJobSiteAddress(e.target.value)}
+  />
+</label>
+
+
+     
+    </div>
+  </div>
+</div>
+
 <div style={{ marginBottom: "16px" }}>
   <button
     onClick={() => {
       setQuoteItems([]);
+      setContractorCustomerId("");
+setContractorCompany("");
+setContractorContact("");
+setContractorStreet("");
+setContractorCity("");
+setContractorState("");
+setContractorZip("");
+
+setHomeownerName("");
+setHomeownerPhone("");
+setJobStreet("");
+setJobCity("");
+setJobState("");
+setJobZip("");
+      setPaymentTerms("deposit");
+      setPaymentResponsible("customer");
+      setTechPaymentNote("");
       setLaborItems([
         {
           id: 1,
@@ -779,19 +931,36 @@ lineTotal: calculateQuoteItemLineTotal(
               </>
             )}
           </div>
+<h2 style={{ marginTop: "24px" }}>New Quote Item</h2>
 
           <div>
-            <label>Width: </label>
-            <input type="text" value={width} onChange={(e) => setWidth(e.target.value)} />
-          </div>
+<div style={{ marginTop: "20px", marginBottom: "10px" }}>
+  <strong>Glass Details</strong>
+</div>
 
-          <div>
-            <label>Height: </label>
-            <input type="text" value={height} onChange={(e) => setHeight(e.target.value)} />
-          </div>
 
-          <div>
 <div>
+  <label>Width</label>
+  <input
+    type="text"
+    value={width}
+    onChange={(e) => setWidth(e.target.value)}
+    placeholder='Example: 38 1/2'
+  />
+</div>
+
+          <div>
+  <label>Height</label>
+  <input
+    type="text"
+    value={height}
+    onChange={(e) => setHeight(e.target.value)}
+    placeholder='Example: 69 3/4'
+  />
+</div>
+
+
+      <div>
   <button type="button" onClick={handleAddUnit}>
     Add Unit to Quote
   </button>
@@ -832,13 +1001,19 @@ lineTotal: calculateQuoteItemLineTotal(
           </div>
 
           <div>
-            <label>Quantity: </label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-            />
-          </div>
+<div style={{ marginTop: "20px", marginBottom: "10px" }}>
+  <strong>Quote Item Details</strong>
+</div>
+
+<div>
+  <label>Quantity</label>
+  <input
+    type="number"
+    min="1"
+    value={quantity}
+    onChange={(e) => setQuantity(Number(e.target.value))}
+  />
+</div>
 
           <div>
             <label>Lite 1: </label>
@@ -872,22 +1047,26 @@ lineTotal: calculateQuoteItemLineTotal(
               ))}
             </select>
           </div>
+<div>
+  <label>OA</label>
+  <input
+    type="text"
+    value={formatThickness(overallThickness)}
+    readOnly
+  />
+</div>
 
-          <p>
-            <strong>OA:</strong> {formatThickness(overallThickness)}
-          </p>
-
-          <div>
-            <label>Part Code: </label>
-            <input
-              type="text"
-              value={partCode}
-              onChange={(e) => setPartCode(e.target.value)}
-            />
-          </div>
+        <div>
+  <label>Part Code</label>
+  <input
+    type="text"
+    value={partCode}
+    onChange={(e) => setPartCode(e.target.value)}
+  />
+</div>
 
 <div>
-  <label>Description: </label>
+  <label>Description</label>
   <input
     type="text"
     value={description}
@@ -895,15 +1074,7 @@ lineTotal: calculateQuoteItemLineTotal(
   />
 </div>
 
-<div>
-  <label>Unit Location: </label>
-  <input
-    type="text"
-    value={location}
-    onChange={(e) => setLocation(e.target.value)}
-    placeholder="Window 1, Front Left, Over Sink..."
-  />
-</div>
+
 
 <div>
   <label>
@@ -916,8 +1087,11 @@ lineTotal: calculateQuoteItemLineTotal(
             </label>
           </div>
 
-          <div>
-            <label>Pricing Category: </label>
+         
+<div style={{ marginTop: "20px", marginBottom: "10px" }}>
+  <strong>Pricing</strong>
+</div>
+            <label>Pricing Category</label>
             <select value={pricingCategoryId} onChange={(e) => setPricingCategoryId(e.target.value)}>
               {PRICING_CATEGORIES.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -950,10 +1124,6 @@ lineTotal: calculateQuoteItemLineTotal(
           </div>
 
        
-        </div>
-
-
- <div>
 
  <div style={{ marginBottom: "12px" }}>
   <label>
@@ -1025,10 +1195,8 @@ lineTotal: calculateQuoteItemLineTotal(
       <p><strong>Tax:</strong> {currency.format(customerTax)}</p>
       <p><strong>Grand Total:</strong> {currency.format(customerTotal)}</p>
     </div>
-  </div>
 
-
-
+                 </div>
         </div>
       </div>
     </main>
