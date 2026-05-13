@@ -516,6 +516,114 @@ const displayQuoteItems = quoteItems;
   <div style={{ fontSize: "12px", color: "#b36b00", marginTop: "4px" }}>
     Size edits recalculate pricing using the current temporary formula.
   </div>
+<div style={{ marginTop: "8px", fontSize: "14px" }}>
+  Lite 1:{" "}<select
+  value={item.lite1Id}
+  onChange={(e) => {
+    const newLite1Id = e.target.value;
+
+    setQuoteItems((prev) =>
+      prev.map((quoteItem) =>
+        quoteItem.id === item.id
+          ? {
+             ...quoteItem,
+lite1Id: newLite1Id,
+oa: formatThickness(
+  getById(GLASS_PRODUCTS, newLite1Id).thickness +
+  getById(SPACERS, quoteItem.spacerId).thickness +
+  getById(GLASS_PRODUCTS, quoteItem.lite2Id).thickness
+),
+lineTotal: calculateQuoteItemLineTotal(
+                { ...quoteItem, lite1Id: newLite1Id },
+                quoteItem.width,
+                quoteItem.height,
+                quoteItem.qty
+              ),
+            }
+          : quoteItem
+      )
+    );
+  }}
+>
+    {GLASS_PRODUCTS.map((g) => (
+      <option key={g.id} value={g.id}>
+        {g.name}
+      </option>
+    ))}
+  </select>
+
+  {"  "}Spacer:{" "}
+  <select
+  value={item.spacerId}
+  onChange={(e) => {
+    const newSpacerId = e.target.value;
+
+    setQuoteItems((prev) =>
+      prev.map((quoteItem) =>
+        quoteItem.id === item.id
+          ? {
+              ...quoteItem,
+spacerId: newSpacerId,
+oa: formatThickness(
+  getById(GLASS_PRODUCTS, quoteItem.lite1Id).thickness +
+  getById(SPACERS, newSpacerId).thickness +
+  getById(GLASS_PRODUCTS, quoteItem.lite2Id).thickness
+),
+lineTotal: calculateQuoteItemLineTotal(
+                { ...quoteItem, spacerId: newSpacerId },
+                quoteItem.width,
+                quoteItem.height,
+                quoteItem.qty
+              ),
+            }
+          : quoteItem
+      )
+    );
+  }}
+>
+    {SPACERS.map((s) => (
+      <option key={s.id} value={s.id}>
+        {s.name}
+      </option>
+    ))}
+  </select>
+
+  {"  "}Lite 2:{" "}
+<select
+  value={item.lite2Id}
+  onChange={(e) => {
+    const newLite2Id = e.target.value;
+
+    setQuoteItems((prev) =>
+      prev.map((quoteItem) =>
+        quoteItem.id === item.id
+          ? {
+              ...quoteItem,
+lite2Id: newLite2Id,
+oa: formatThickness(
+  getById(GLASS_PRODUCTS, quoteItem.lite1Id).thickness +
+  getById(SPACERS, quoteItem.spacerId).thickness +
+  getById(GLASS_PRODUCTS, newLite2Id).thickness
+),
+lineTotal: calculateQuoteItemLineTotal(
+                { ...quoteItem, lite2Id: newLite2Id },
+                quoteItem.width,
+                quoteItem.height,
+                quoteItem.qty
+              ),
+            }
+          : quoteItem
+      )
+    );
+  }}
+>
+    {GLASS_PRODUCTS.map((g) => (
+      <option key={g.id} value={g.id}>
+        {g.name}
+      </option>
+    ))}
+  </select>
+</div>
 </div>
             </div>
           ))}
@@ -859,7 +967,7 @@ const displayQuoteItems = quoteItems;
 </div>
 
 <div style={{ border: "1px solid #ccc", padding: "16px", marginBottom: "20px", background: "#fafafa" }}>
-  <h3 style={{ marginTop: 0 }}>Unit Pricing (FGMM Cost + Tier Pricing)</h3>
+  <h3 style={{ marginTop: 0 }}>Current New Unit Pricing</h3>
   <p><strong>Width x Height:</strong> {width} x {height}</p>
   <p><strong>OA:</strong> {formatThickness(overallThickness)}</p>
   <p><strong>Lite 1:</strong> {lite1.name} — {currency.format(lite1.costPerSqFt)}/sq ft</p>
