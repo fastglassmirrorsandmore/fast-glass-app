@@ -103,6 +103,7 @@ useEffect(() => {
   const [showTripCharge, setShowTripCharge] = useState(false);
   const [tripChargeMiles, setTripChargeMiles] = useState("0");
   const [tripChargeRate, setTripChargeRate] = useState("2.725");
+const [hasContractor, setHasContractor] = useState(true);
 const [contractorCustomerId, setContractorCustomerId] = useState("");
 const [contractorCompany, setContractorCompany] = useState("");
 const [contractorContact, setContractorContact] = useState("");
@@ -110,6 +111,7 @@ const [contractorStreet, setContractorStreet] = useState("");
 const [contractorCity, setContractorCity] = useState("");
 const [contractorState, setContractorState] = useState("");
 const [contractorZip, setContractorZip] = useState("");
+const [homeownerCustomerId, setHomeownerCustomerId] = useState("");
 const [homeownerName, setHomeownerName] = useState("");
 const [jobSiteAddress, setJobSiteAddress] = useState("");
 const [homeownerPhone, setHomeownerPhone] = useState("");
@@ -318,13 +320,38 @@ return (<main
 >
   <h2 style={{ marginTop: 0 }}>Customer / Job Information</h2>
 
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "24px",
+    alignItems: "start",
+  }}
+>
     <div>
+      <div
+  style={{
+    border: "1px solid #ccc",
+    padding: "16px",
+    borderRadius: "6px",
+    background: "#fff",
+  }}
+>
       <h3>Contractor / Billing</h3>
-<div style={{ display: "grid", gap: "8px" }}>
-  <label>
-    Customer ID
-    <input
+<label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+  <input
+    type="checkbox"
+    checked={hasContractor}
+    onChange={(e) => setHasContractor(e.target.checked)}
+  />
+  This quote has a contractor
+</label>
+{hasContractor && (
+  <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+ <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  Customer ID
+   <input
+      style={{ width: "100%", padding: "8px" }}
       value={contractorCustomerId}
       onChange={(e) => setContractorCustomerId(e.target.value)}
     />
@@ -332,84 +359,134 @@ return (<main
 <label>
   Company Name
   <input
+    style={{ width: "100%", padding: "8px" }}
     value={contractorCompany}
     onChange={(e) => setContractorCompany(e.target.value)}
   />
 </label>
 
-<label>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
   Contact Name
-  <input
+ <input
+    style={{ width: "100%", padding: "8px" }}
     value={contractorContact}
     onChange={(e) => setContractorContact(e.target.value)}
   />
 </label>
 
-<label>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
   Street
   <input
+    style={{ width: "100%", padding: "8px" }}
     value={contractorStreet}
     onChange={(e) => setContractorStreet(e.target.value)}
   />
 </label>
 
 <div className="grid grid-cols-3 gap-2">
-  <label>
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
     City
     <input
+      style={{ width: "100%", padding: "8px" }}
       value={contractorCity}
       onChange={(e) => setContractorCity(e.target.value)}
     />
   </label>
 
-  <label>
+ <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
     State
     <input
+      style={{ width: "100%", padding: "8px" }}
       value={contractorState}
       onChange={(e) => setContractorState(e.target.value)}
     />
   </label>
 
-  <label>
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
     ZIP
     <input
+      style={{ width: "100%", padding: "8px" }}
       value={contractorZip}
       onChange={(e) => setContractorZip(e.target.value)}
     />
-  </label>
+   </label>
 </div>
 </div>
-
+)}
    </div>
-    </div>
+</div>
 
-    <div>
+<div
+  style={{
+    border: "1px solid #ccc",
+    padding: "16px",
+    borderRadius: "6px",
+    background: "#fff",
+  }}
+>
       <h3>Homeowner / Job Site</h3>
-<div style={{ display: "grid", gap: "8px" }}>
-
-<label>
+<div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
   Homeowner Name
   <input
+    style={{ width: "100%", padding: "8px" }}
     value={homeownerName}
     onChange={(e) => setHomeownerName(e.target.value)}
   />
 </label>
-<label>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
   Phone
   <input
+  style={{ width: "100%", padding: "8px" }}
   value={homeownerPhone}
   onChange={(e) => setHomeownerPhone(e.target.value)}
 />
 </label>
 
-<label>
-  Job Site Address
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  Street
   <input
-    value={jobSiteAddress}
-    onChange={(e) => setJobSiteAddress(e.target.value)}
+    style={{ width: "100%", padding: "8px" }}
+    value={jobStreet}
+    onChange={(e) => setJobStreet(e.target.value)}
   />
 </label>
 
+<div className="grid grid-cols-3 gap-2">
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+    City
+    <input
+      style={{ width: "100%", padding: "8px" }}
+      value={jobCity}
+      onChange={(e) => setJobCity(e.target.value)}
+    />
+  </label>
+
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+    State
+    <input
+      style={{ width: "100%", padding: "8px" }}
+      value={jobState}
+      onChange={(e) => setJobState(e.target.value)}
+    />
+  </label>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  Customer ID / Phone
+  <input
+    style={{ width: "100%", padding: "8px" }}
+    value={homeownerCustomerId}
+    onChange={(e) => setHomeownerCustomerId(e.target.value)}
+  />
+</label>
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+    ZIP
+    <input
+      style={{ width: "100%", padding: "8px" }}
+      value={jobZip}
+      onChange={(e) => setJobZip(e.target.value)}
+    />
+  </label>
+</div>
 
      
     </div>
@@ -961,7 +1038,11 @@ lineTotal: calculateQuoteItemLineTotal(
 
 
       <div>
-  <button type="button" onClick={handleAddUnit}>
+  <button
+  type="button"
+  onClick={handleAddUnit}
+  style={{ padding: "8px 12px", marginRight: "8px" }}
+>
     Add Unit to Quote
   </button>
 <button
@@ -1196,9 +1277,10 @@ lineTotal: calculateQuoteItemLineTotal(
       <p><strong>Grand Total:</strong> {currency.format(customerTotal)}</p>
     </div>
 
-                 </div>
+                               </div>
         </div>
       </div>
+    </div>
     </main>
   );
 }
