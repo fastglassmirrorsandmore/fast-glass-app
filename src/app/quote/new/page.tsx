@@ -113,16 +113,20 @@ const [contractorState, setContractorState] = useState("");
 const [contractorZip, setContractorZip] = useState("");
 const [homeownerCustomerId, setHomeownerCustomerId] = useState("");
 const [homeownerName, setHomeownerName] = useState("");
-const [jobSiteAddress, setJobSiteAddress] = useState("");
 const [homeownerPhone, setHomeownerPhone] = useState("");
 
-
-
 const [unitLocation, setUnitLocation] = useState("");
+const [showLocationNotes, setShowLocationNotes] = useState(false);
+
 const [jobStreet, setJobStreet] = useState("");
 const [jobCity, setJobCity] = useState("");
 const [jobState, setJobState] = useState("");
 const [jobZip, setJobZip] = useState("");
+
+const [quoteNumber, setQuoteNumber] = useState("QFG0023110");
+const [workOrderNumber, setWorkOrderNumber] = useState("");
+const [invoiceNumber, setInvoiceNumber] = useState("");
+const [quoteStatus, setQuoteStatus] = useState("quote");
   const [paymentTerms, setPaymentTerms] = useState("deposit");
   const [paymentResponsible, setPaymentResponsible] = useState("customer");
   const [techPaymentNote, setTechPaymentNote] = useState("");
@@ -323,7 +327,7 @@ return (<main
 <div
   style={{
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr 1fr 1fr",
     gap: "24px",
     alignItems: "start",
   }}
@@ -492,6 +496,100 @@ return (<main
     </div>
   </div>
 </div>
+<div
+ style={{
+  borderBottom: "1px solid #ddd",
+  padding: "8px 0",
+}}
+>
+  <h3>Quote Information</h3>
+<div style={{ fontSize: "13px", marginBottom: "12px" }}>
+  <label style={{ display: "grid", gap: "4px", fontWeight: 600, marginBottom: "12px" }}>
+  Status
+  <select
+    value={quoteStatus}
+    onChange={(e) => setQuoteStatus(e.target.value)}
+    style={{ width: "100%", padding: "8px" }}
+  >
+    <option value="quote">Quote</option>
+    <option value="approved">Approved</option>
+    <option value="ordered">Ordered</option>
+    <option value="scheduled">Scheduled</option>
+    <option value="installed">Installed</option>
+    <option value="invoiced">Invoiced</option>
+    <option value="closed">Closed</option>
+  </select>
+</label>
+</div>
+
+  <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  Quote #
+  <input
+    type="text"
+    style={{ width: "100%", padding: "8px" }}
+    value={quoteNumber}
+    readOnly
+  />
+</label>
+    <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+      Quote Date
+      <input
+        type="date"
+        style={{ width: "100%", padding: "8px" }}
+      />
+    </label>
+
+    <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+      Salesperson
+      <input
+        type="text"
+        style={{ width: "100%", padding: "8px" }}
+        placeholder="Salesperson"
+      />
+    </label>
+
+    <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+      PO Number
+      <input
+        type="text"
+        style={{ width: "100%", padding: "8px" }}
+        placeholder="PO Number"
+      />
+    </label>
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  WO #
+  <input
+    type="text"
+    style={{ width: "100%", padding: "8px" }}
+    value={workOrderNumber}
+    readOnly
+  />
+</label>
+
+<label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+  Invoice #
+  <input
+    type="text"
+    style={{ width: "100%", padding: "8px" }}
+    value={invoiceNumber}
+    readOnly
+  />
+</label>
+<button
+  type="button"
+  onClick={() => {
+    const newWoNumber = `WO-${Date.now()}`;
+    setWorkOrderNumber(newWoNumber);
+    setInvoiceNumber(newWoNumber);
+    setQuoteStatus("approved");
+  }}
+  style={{ padding: "8px 12px", marginTop: "8px" }}
+>
+  Approve Quote / Create WO
+</button>
+  </div>
+</div>
 
 <div style={{ marginBottom: "16px" }}>
   <button
@@ -555,6 +653,25 @@ setJobZip("");
         <div>
 
           <h2>Quote Items</h2>
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "60px 90px 90px 80px 100px 1fr 100px",
+    gap: "8px",
+    fontWeight: 700,
+    borderBottom: "1px solid #333",
+    paddingBottom: "6px",
+    marginBottom: "8px",
+  }}
+>
+  <div>Qty</div>
+  <div>Width</div>
+  <div>Height</div>
+  <div>OA</div>
+  <div>Part</div>
+  <div>Description</div>
+  <div>Total</div>
+</div>
 
           {displayQuoteItems.map((item, index) => (
             <div
@@ -575,8 +692,29 @@ setJobZip("");
     marginBottom: "6px",
   }}
 ><div>
-  <strong>{item.part}</strong>
+{item.location.trim() !== "" && (
+  <div style={{ fontWeight: 600, marginBottom: "4px" }}>
+    {item.location}
+  </div>
+)}
 
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "60px 90px 90px 80px 100px 1fr 100px",
+    gap: "8px",
+    alignItems: "center",
+    marginBottom: "8px",
+  }}
+>
+  <div>{item.qty}</div>
+  <div>{item.width}</div>
+  <div>{item.height}</div>
+  <div>{item.oa}</div>
+  <div><strong>{item.part}</strong></div>
+  <div>{item.description}</div>
+  <div><strong>{currency.format(item.lineTotal)}</strong></div>
+</div>
   <input
     type="text"
     value={item.location}
@@ -1009,8 +1147,33 @@ lineTotal: calculateQuoteItemLineTotal(
             )}
           </div>
 <h2 style={{ marginTop: "24px" }}>New Quote Item</h2>
+<div style={{ marginBottom: "12px" }}>
+  <label>
+    <input
+      type="checkbox"
+      checked={showLocationNotes}
+      onChange={(e) => setShowLocationNotes(e.target.checked)}
+    />{" "}
+    Add Location / Notes
+  </label>
 
-          <div>
+  {showLocationNotes && (
+    <div style={{ marginTop: "8px" }}>
+      <label style={{ display: "grid", gap: "4px", fontWeight: 600 }}>
+        Location / Notes
+        <input
+          type="text"
+          value={unitLocation}
+          onChange={(e) => setUnitLocation(e.target.value)}
+          placeholder="Optional: Kitchen over sink, Dining Room #1, Right of Fireplace..."
+          style={{ width: "100%", padding: "8px" }}
+        />
+      </label>
+    </div>
+  )}
+</div>
+  
+<div>
 <div style={{ marginTop: "20px", marginBottom: "10px" }}>
   <strong>Glass Details</strong>
 </div>
@@ -1029,13 +1192,29 @@ lineTotal: calculateQuoteItemLineTotal(
           <div>
   <label>Height</label>
   <input
-    type="text"
-    value={height}
-    onChange={(e) => setHeight(e.target.value)}
-    placeholder='Example: 69 3/4'
-  />
+  type="text"
+  value={height}
+  onChange={(e) => setHeight(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleAddUnit();
+    }
+  }}
+  placeholder='Example: 69 3/4'
+/>
 </div>
 
+<input
+  type="number"
+  min="1"
+  value={quantity}
+  onChange={(e) => setQuantity(Number(e.target.value))}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleAddUnit();
+    }
+  }}
+/>
 
       <div>
   <button
@@ -1086,15 +1265,7 @@ lineTotal: calculateQuoteItemLineTotal(
   <strong>Quote Item Details</strong>
 </div>
 
-<div>
-  <label>Quantity</label>
-  <input
-    type="number"
-    min="1"
-    value={quantity}
-    onChange={(e) => setQuantity(Number(e.target.value))}
-  />
-</div>
+
 
           <div>
             <label>Lite 1: </label>
